@@ -1,0 +1,45 @@
+# Real setup log captured 2026-10-16 22:33 IST on Windows 11 + WSL2 Ubuntu 22.04
+
+## pipegen --version
+PipeGen version 0.5.1
+
+## Host GPU (nvidia-smi inside WSL2)
+name, driver_version, memory.total [MiB]
+NVIDIA GeForce RTX 5050 Laptop GPU, 616.92, 8151 MiB
+
+## GPU visible inside Docker (--gpus all)
+name, driver_version
+NVIDIA GeForce RTX 5050 Laptop GPU, 616.92
+
+## PipeGen launcher prerequisite checklist + image pull (from ~/pipegen_launch.log)
+PipeGen prerequisite checklist
+  ✓ NVIDIA GPU detected
+  ✓ NVIDIA driver 616.92 (>= 560.35.03)
+  ✓ Docker installed
+  ✓ User 'kali' in 'docker' group
+  ✓ Docker daemon reachable
+  ✓ NVIDIA Container Toolkit installed
+  ✓ socat installed
+  ✓ Display session: X11
+  ✓ Free disk space 952.9GB on /var/lib/docker
+  ✓ Permissions OK: /opt/PipeGen
+
+7.1-amd64-v3: Pulling from craftifaidocker/deepstream
+Digest: sha256:87b0bd90d18b92e24b539348ae93c58c42c636b3e379109b073ad0a7466dfd30
+Status: Downloaded newer image for craftifaidocker/deepstream:7.1-amd64-v3
+docker.io/craftifaidocker/deepstream:7.1-amd64-v3
+EXIT=0
+
+## DeepStream image on disk
+craftifaidocker/deepstream:7.1-amd64-v3 87b0bd90d18b 36.8GB
+
+## TensorRT inside the PipeGen container
+libnvinfer10 10.3.0.26-1+cuda12.5
+
+## PipeGen GUI window (X11 tree) - window created but renders blank under WSLg
+        0xa00008 "PipeGen — Sign In": ("PipeGenApp" "PipeGen")  1908x1047+6+27  +6+27
+     0xa0000a "PipeGen": ()  1x1+0+0  +0+0
+     0xa00006 "Qt Selection Owner for PipeGenApp": ()  3x3+0+0  +0+0
+
+## MQTT broker
+active

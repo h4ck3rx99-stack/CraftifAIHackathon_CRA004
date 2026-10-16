@@ -1,0 +1,17 @@
+# SYNTHETIC self-test of alerts/subscriber.py (NOT pipeline output)
+# Hand-written test messages on topic test/junction, threshold=3, to verify parsing + alert logic.
+
+[subscriber] connected to localhost:1883 rc=Success, topic=test/junction, threshold=3 veh/min
+[22:04:08] counts: car=1, person=1 | vehicles/min: 1
+[22:04:08] counts: car=2, person=2 | vehicles/min: 2
+[22:04:08] counts: car=3, person=3 | vehicles/min: 3
+[22:04:08] counts: bus=1, car=3, person=3 | vehicles/min: 4
+!!! CONGESTION ALERT: 4 vehicles/min > 3
+[22:04:08] counts: bus=1, car=3, person=3 | vehicles/min: 4
+!!! CONGESTION ALERT: 4 vehicles/min > 3
+[22:04:08] counts: bus=1, car=3, motorbike=2, person=3 | vehicles/min: 6
+!!! CONGESTION ALERT: 6 vehicles/min > 3
+--- incidents written:
+{"ts": "2026-10-16T16:34:08.736767+00:00", "type": "CONGESTION", "vehicles_per_min": 4, "threshold": 3, "totals": {"car": 3, "person": 3, "bus": 1}}
+{"ts": "2026-10-16T16:34:08.739154+00:00", "type": "CONGESTION", "vehicles_per_min": 4, "threshold": 3, "totals": {"car": 3, "person": 3, "bus": 1}}
+{"ts": "2026-10-16T16:34:08.741902+00:00", "type": "CONGESTION", "vehicles_per_min": 6, "threshold": 3, "totals": {"car": 3, "person": 3, "bus": 1, "motorbike": 2}}
