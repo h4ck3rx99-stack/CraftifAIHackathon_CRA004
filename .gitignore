@@ -1,0 +1,13 @@
+# Videos and large binaries (GitHub rejects files over 100 MB; we cap at 50 MB)
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.h264
+*.engine
+*.plan
+*.trt
+*.onnx
+*.deb
+__pycache__/
+.venv/
