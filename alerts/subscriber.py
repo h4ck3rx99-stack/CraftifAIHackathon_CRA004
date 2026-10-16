@@ -66,7 +66,10 @@ def main():
                     help="vehicles per minute that triggers a CONGESTION alert")
     ap.add_argument("--cooldown", type=int, default=30,
                     help="seconds between repeated alerts")
+    ap.add_argument("--incidents", default=str(INCIDENTS),
+                    help="JSONL file that alerts are appended to")
     args = ap.parse_args()
+    incidents = Path(args.incidents)
 
     totals = Counter()            # unique tracked objects per class
     seen = set()                  # (class, track_id) already counted
@@ -110,7 +113,7 @@ def main():
                 "totals": dict(totals),
             }
             print(f"!!! CONGESTION ALERT: {vpm} vehicles/min > {args.threshold}")
-            with INCIDENTS.open("a") as f:
+            with incidents.open("a") as f:
                 f.write(json.dumps(alert) + "\n")
 
     try:
