@@ -1,0 +1,27 @@
+
+==============================================================================
+[2026-10-18T09:57:12+00:00] run.debug.sh FAILED (attempt 1/4)
+------------------------------------------------------------------------------
+pipeline never reached PLAYING (preroll/negotiation failure, or a blocking call before PLAYING):
+…cannot open shared object file: No such file or directory
+(gst-plugin-scanner:1874): GStreamer-WARNING **: 09:57:12.175: Failed to load plugin '/usr/lib/x86_64-linux-gnu/gstreamer-1.0/deepstream/libnvdsgst_udp.so': librivermax.so.1: cannot open shared object file: No such file or directory
+(gst-plugin-scanner:1874): GStreamer-WARNING **: 09:57:12.363: Failed to load plugin '/usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstmplex.so': libmjpegutils-2.1.so.0: cannot open shared object file: No such file or directory
+WARNING: erroneous pipeline: no property "display-tracking-id" in element "nvdsosd0"
+
+==============================================================================
+[2026-10-18T09:58:40+00:00] run.debug.sh FAILED (attempt 2/4)
+------------------------------------------------------------------------------
+pipeline never reached PLAYING (preroll/negotiation failure, or a blocking call before PLAYING):
+…92b47c13d/output/metadata.json
+Failed to load config file: No such file or directory
+** ERROR: <gst_nvinfer_backport_parse_config_file:1417>: failed
+(gst-launch-1.0:3060): GStreamer-WARNING **: 09:58:40.446: Trying to link elements mux and queue0 that don't share a common ancestor: queue0 hasn't been added to a bin or pipeline, and mux is in pipeline0
+(gst-launch-1.0:3060): GStreamer-WARNING **: 09:58:40.446: Trying to link elements mux and queue0 that don't share a common ancestor: queue0 hasn't been added to a bin or pipeline, and mux is in pipeline0
+WARNING: erroneous pipeline: syntax error
+
+==============================================================================
+[2026-10-18T10:05:48+00:00] run.debug.sh FAILED (attempt 1/4)
+------------------------------------------------------------------------------
+pipeline never reached PLAYING (preroll/negotiation failure, or a blocking call before PLAYING):
+…0, block-linear=(boolean)false, nvbuf-memory-type=(string)nvbuf-mem-cuda-device, gpu-id=(int)0
+/GstPipeline:pipeline0/Gstnvvideoconvert:nvvideoconvert1.GstPad:sink: caps = video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, multiview-mode=(string)mono, multiview-flags=(GstVideoMultiviewFlagsSet)0:ffffffff:/right-view-first/left-flipped/left-flopped/right-flipped/right-flopped/half-aspect/mixed-mono, framerate=(fraction)30/1, format=(string)NV12, block-linear=(boolean)false, nvbuf-memory-type=(string)nvbuf-mem-cuda-device, gpu-id=(int)0, batch-size=(int)1, num-surfaces-per-frame=(int)1

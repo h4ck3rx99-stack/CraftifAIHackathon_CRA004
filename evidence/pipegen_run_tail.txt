@@ -1,0 +1,4 @@
+[meta_json] file -> /home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/output/metadata.json
+Execution ended after 0:00:41.679175216
+[meta_json] 2117 frames, 104684 objects
+[mqtt] done    2117 frames   104684 objects    2117 published   23.6 msg/s   41.8s

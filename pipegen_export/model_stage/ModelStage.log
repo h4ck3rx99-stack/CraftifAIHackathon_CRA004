@@ -1,0 +1,14 @@
+# PipeGen model stage — h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d
+# UTC                   step             outcome  fact
+2026-10-18T09:04:31Z  visualize        start    Checking every node against the TensorRT parser…
+2026-10-18T09:04:34Z  visualize        ok       321 nodes · 0 unresolved
+2026-10-18T09:04:51Z  compile          start    Compiling the model with TensorRT at FP16…
+2026-10-18T09:04:54Z  visualize        ok       321 nodes · 0 unresolved
+2026-10-18T09:04:55Z  compile          failed   builder returned no engine (see the TensorRT log)
+2026-10-18T09:22:01Z  compile          start    Compiling the model with TensorRT at FP16…
+2026-10-18T09:22:06Z  visualize        ok       321 nodes · 0 unresolved
+2026-10-18T09:24:07Z  choice           user     selected_artifact=baseline
+2026-10-18T09:24:07Z  choice           user     optimization_decision=
+2026-10-18T09:24:07Z  compile          warning  fp16 · 256 TRT layers · 31.1 MB
+2026-10-18T09:40:06Z  benchmark        start    Benchmarking the compiled engine on this device…
+2026-10-18T09:40:13Z  engine           ok       6.374 ms mean

@@ -1,0 +1,669 @@
+{
+  "loop": {
+    "next_file": null,
+    "next_task": null,
+    "projectTree": {},
+    "target_function": {
+      "name": "read_file",
+      "parameters": {}
+    },
+    "visited_steps": [
+      "/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/src1/VehicleDetection/application.py"
+    ]
+  },
+  "pipeline_ir": {
+    "connections": [
+      [
+        "p01o_frame",
+        "p02i_frame"
+      ],
+      [
+        "p02o_tensor",
+        "p03i_tensor"
+      ],
+      [
+        "p03o_raw",
+        "p04i_raw"
+      ],
+      [
+        "p02o_geometry",
+        "p04i_geometry"
+      ],
+      [
+        "p04o_detections",
+        "p05i_detections"
+      ],
+      [
+        "p01o_meta",
+        "p05i_meta"
+      ],
+      [
+        "p05o_tracks",
+        "p06i_tracks"
+      ],
+      [
+        "p06o_counts",
+        "p07i_counts"
+      ],
+      [
+        "p07o_results",
+        "p08i_results"
+      ],
+      [
+        "p07o_results",
+        "p09i_results"
+      ],
+      [
+        "p01o_frame",
+        "p10i_frame"
+      ],
+      [
+        "p07o_results",
+        "p10i_results"
+      ]
+    ],
+    "nodes": [
+      {
+        "description": "Read every junction video frame and its timing metadata.",
+        "id": 1,
+        "name": "file",
+        "ports": [
+          {
+            "direction": "output",
+            "format": {
+              "color": "BGR",
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p01o_frame",
+            "tensor": {
+              "dtype": "uint8",
+              "shape": [
+                1080,
+                1920,
+                3
+              ]
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p01o_meta",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "cap = cv2.VideoCapture('/home/aayush/videos/junction_1080p.mp4')\nif not cap.isOpened(): raise IOError('Cannot open junction video')\nindex = 0\nfps = cap.get(cv2.CAP_PROP_FPS)\nif fps <= 0: fps = 30.0\nwhile True:\n    ok, frame = cap.read()\n    if not ok: break\n    position_ms = cap.get(cv2.CAP_PROP_POS_MSEC)\n    timestamp_s = position_ms / 1000.0 if position_ms > 0 else index / fps\n    emit(p01o_frame=frame, p01o_meta={'frame_index': index, 'timestamp_s': timestamp_s, 'width': frame.shape[1], 'height': frame.shape[0]})\n    index += 1\ncap.release()",
+        "resolution": [
+          1920,
+          1080
+        ],
+        "type": "input",
+        "url": "file:///home/aayush/videos/junction_1080p.mp4"
+      },
+      {
+        "color_order": "RGB",
+        "description": "Letterbox junction frames and produce RGB model tensors.",
+        "id": 2,
+        "mean": null,
+        "normalization": 0.00392156862745098,
+        "offset": null,
+        "pad_value": 114,
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": "BGR",
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p02i_frame",
+            "tensor": {
+              "dtype": "uint8",
+              "shape": [
+                1080,
+                1920,
+                3
+              ]
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": "RGB",
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p02o_tensor",
+            "tensor": {
+              "dtype": "fp32",
+              "shape": [
+                1,
+                3,
+                640,
+                640
+              ]
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p02o_geometry",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "def process(frame):\n    orig_h, orig_w = frame.shape[:2]\n    input_h, input_w = 640, 640\n    ratio = min(input_h / orig_h, input_w / orig_w)\n    new_w, new_h = round(orig_w * ratio), round(orig_h * ratio)\n    resized = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)\n    canvas = np.full((input_h, input_w, 3), 114, dtype=np.uint8)\n    pad_x, pad_y = (input_w - new_w) // 2, (input_h - new_h) // 2\n    canvas[pad_y:pad_y + new_h, pad_x:pad_x + new_w] = resized\n    blob = cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0\n    blob = np.transpose(blob, (2, 0, 1))[None]\n    geometry = {'ratio': ratio, 'pad_x': pad_x, 'pad_y': pad_y, 'width': orig_w, 'height': orig_h}\n    return np.ascontiguousarray(blob), geometry",
+        "resize": [
+          640,
+          640
+        ],
+        "resize_mode": "letterbox",
+        "scale": 0.00392156862745098,
+        "std": null,
+        "type": "preprocess"
+      },
+      {
+        "batchSize": 1,
+        "description": "Run COCO YOLO11s on each preprocessed junction frame.",
+        "id": 3,
+        "layout": "NCHW",
+        "model": {
+          "inputs": [
+            {
+              "dtype": "fp32",
+              "name": "images",
+              "shape": [
+                1,
+                3,
+                640,
+                640
+              ]
+            }
+          ],
+          "name": "yolo11s",
+          "outputs": [
+            {
+              "dtype": "fp32",
+              "name": "output0",
+              "shape": [
+                1,
+                84,
+                8400
+              ]
+            }
+          ],
+          "parameter_count": 9485791,
+          "type": "engine",
+          "url": "/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/model_stage/yolo11s.fp16.plan",
+          "source_onnx": "/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/src1/VehicleDetection/model/yolo11s.onnx"
+        },
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": "RGB",
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p03i_tensor",
+            "tensor": {
+              "dtype": "fp32",
+              "shape": [
+                1,
+                3,
+                640,
+                640
+              ]
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p03o_raw",
+            "tensor": {
+              "dtype": "fp32",
+              "shape": [
+                1,
+                84,
+                8400
+              ]
+            }
+          }
+        ],
+        "pseudo_code": "session = ort.InferenceSession('/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/src1/VehicleDetection/model/yolo11s.onnx', providers=ort.get_available_providers())\ndef process(blob):\n    return session.run(['output0'], {'images': blob})[0]",
+        "type": "inference"
+      },
+      {
+        "description": "Decode YOLO boxes and retain requested COCO classes.",
+        "id": 4,
+        "label_file_path": null,
+        "num_classes": 80,
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p04i_raw",
+            "tensor": {
+              "dtype": "fp32",
+              "shape": [
+                1,
+                84,
+                8400
+              ]
+            }
+          },
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p04i_geometry",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p04o_detections",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "def process(raw, geometry):\n    # Model output: [1,84,8400], each transposed row is cx,cy,w,h and 80 COCO scores.\n    preds = np.squeeze(raw, 0).T\n    boxes_xywh, scores = preds[:, :4], preds[:, 4:]\n    class_ids = np.argmax(scores, axis=1)\n    confidences = scores[np.arange(scores.shape[0]), class_ids]\n    keep = confidences >= 0.25\n    boxes_xywh, confidences, class_ids = boxes_xywh[keep], confidences[keep], class_ids[keep]\n    dets = []\n    if len(boxes_xywh):\n        cx, cy, w, h = boxes_xywh.T\n        ratio, pad_x, pad_y = geometry['ratio'], geometry['pad_x'], geometry['pad_y']\n        orig_w, orig_h = geometry['width'], geometry['height']\n        x1 = np.clip((cx - w / 2 - pad_x) / ratio, 0, orig_w)\n        y1 = np.clip((cy - h / 2 - pad_y) / ratio, 0, orig_h)\n        x2 = np.clip((cx + w / 2 - pad_x) / ratio, 0, orig_w)\n        y2 = np.clip((cy + h / 2 - pad_y) / ratio, 0, orig_h)\n        for c in np.unique(class_ids):\n            idxs = np.where(class_ids == c)[0]\n            rects = np.stack([x1[idxs], y1[idxs], (x2-x1)[idxs], (y2-y1)[idxs]], axis=1)\n            keep_idx = cv2.dnn.NMSBoxes(rects.tolist(), confidences[idxs].tolist(), 0.25, 0.45)\n            keep_idx = np.array(keep_idx).flatten() if len(keep_idx) else []\n            for i in keep_idx:\n                oi = idxs[i]\n                label = {0:'pedestrians', 1:'two_wheelers', 2:'cars', 3:'two_wheelers', 5:'buses'}.get(int(class_ids[oi]))\n                if label is not None and x2[oi] > x1[oi] and y2[oi] > y1[oi]:\n                    dets.append({'box':[float(x1[oi]),float(y1[oi]),float(x2[oi]),float(y2[oi])], 'score':float(confidences[oi]), 'class':int(class_ids[oi]), 'label':label})\n    return {'detections':dets, 'width':geometry['width'], 'height':geometry['height']}",
+        "task": "detection",
+        "threshold": 0.25,
+        "top_items": null,
+        "type": "postprocess"
+      },
+      {
+        "category": "tracking",
+        "description": "Associate observed road users with persistent class-specific identities.",
+        "external_assets": [],
+        "id": 5,
+        "inputs": [
+          "detections",
+          "frame_metadata"
+        ],
+        "name": "tracking",
+        "outputs": [
+          "tracked_detections_and_frame_metadata"
+        ],
+        "parameters": {
+          "match_iou": 0.3,
+          "max_missed_frames": 30,
+          "method": "Track detected road users over time"
+        },
+        "placement": {
+          "attach_point": null,
+          "position": "post_nn"
+        },
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p05i_detections",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          },
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p05i_meta",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p05o_tracks",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "# Persistent for the complete input: active = {}; next_id = 1.\ndef iou(a,b):\n    x1=max(a[0],b[0]); y1=max(a[1],b[1]); x2=min(a[2],b[2]); y2=min(a[3],b[3])\n    intersection=max(0,x2-x1)*max(0,y2-y1)\n    aa=max(0,a[2]-a[0])*max(0,a[3]-a[1]); bb=max(0,b[2]-b[0])*max(0,b[3]-b[1])\n    return intersection/(aa+bb-intersection) if aa+bb-intersection>0 else 0.0\n\ndef process(detection_record, frame_meta):\n    global active, next_id\n    detections=detection_record['detections']\n    candidates=[]\n    for tid, old in active.items():\n        for j, det in enumerate(detections):\n            if old['label']==det['label']:\n                overlap=iou(old['box'],det['box'])\n                if overlap>=parameters['match_iou']: candidates.append((overlap,tid,j))\n    used_ids=set(); used_dets=set(); observed=[]\n    for overlap,tid,j in sorted(candidates,key=lambda x:x[0],reverse=True):\n        if tid in used_ids or j in used_dets: continue\n        used_ids.add(tid); used_dets.add(j)\n        det=detections[j]; old=active[tid]\n        previous_center=old['center']\n        center=((det['box'][0]+det['box'][2])/2,(det['box'][1]+det['box'][3])/2)\n        active[tid]={'box':det['box'],'label':det['label'],'center':center,'last_seen':frame_meta['frame_index']}\n        observed.append({**det,'track_id':tid,'center':center,'previous_center':previous_center})\n    for j,det in enumerate(detections):\n        if j in used_dets: continue\n        tid=next_id; next_id+=1\n        center=((det['box'][0]+det['box'][2])/2,(det['box'][1]+det['box'][3])/2)\n        active[tid]={'box':det['box'],'label':det['label'],'center':center,'last_seen':frame_meta['frame_index']}\n        observed.append({**det,'track_id':tid,'center':center,'previous_center':None})\n    for tid in list(active):\n        if frame_meta['frame_index']-active[tid]['last_seen']>parameters['max_missed_frames']: del active[tid]\n    return {'frame_index':frame_meta['frame_index'],'timestamp_s':frame_meta['timestamp_s'],'width':detection_record['width'],'height':detection_record['height'],'detections':detections,'tracks':observed}",
+        "reference_path": null,
+        "runs_every_frame": true,
+        "state_key": "global",
+        "triggers": [],
+        "type": "custom"
+      },
+      {
+        "category": "state_estimation",
+        "description": "Count unique tracked crossings of the virtual stop line.",
+        "external_assets": [],
+        "id": 6,
+        "inputs": [
+          "tracked_detections_and_frame_metadata"
+        ],
+        "name": "per-class line-crossing count",
+        "outputs": [
+          "tracked_detections_counts_and_crossing_events"
+        ],
+        "parameters": {
+          "count_once_per_track": true,
+          "directions": "both",
+          "line_normalized": [
+            [
+              0.0,
+              0.5
+            ],
+            [
+              1.0,
+              0.5
+            ]
+          ],
+          "method": "Tracked-object virtual-line crossing count"
+        },
+        "placement": {
+          "attach_point": null,
+          "position": "post_tracker"
+        },
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p06i_tracks",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p06o_counts",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "# Persistent for entire video: seen_crossing_ids=set(); totals={k:0 for k in ('cars','two_wheelers','buses','pedestrians')}.\ndef side(point,a,b):\n    return (b[0]-a[0])*(point[1]-a[1])-(b[1]-a[1])*(point[0]-a[0])\ndef process(record):\n    global seen_crossing_ids, totals\n    width,height=record['width'],record['height']\n    (u1,v1),(u2,v2)=parameters['line_normalized']\n    a=(u1*width,v1*height); b=(u2*width,v2*height)\n    events=[]\n    for track in record['tracks']:\n        prev=track['previous_center']; now=track['center']; tid=track['track_id']\n        if prev is None or tid in seen_crossing_ids: continue\n        before=side(prev,a,b); after=side(now,a,b)\n        if not ((before<0 and after>=0) or (before>0 and after<=0)): continue\n        # Require intersection with the finite stop-line segment, not its infinite extension.\n        dx,dy=now[0]-prev[0],now[1]-prev[1]\n        lx,ly=b[0]-a[0],b[1]-a[1]\n        denom=dx*ly-dy*lx\n        if abs(denom)<1e-12: continue\n        t=((a[0]-prev[0])*ly-(a[1]-prev[1])*lx)/denom\n        u=((a[0]-prev[0])*dy-(a[1]-prev[1])*dx)/denom\n        if not (0<=t<=1 and 0<=u<=1): continue\n        label=track['label']; seen_crossing_ids.add(tid); totals[label]+=1\n        events.append({'track_id':tid,'class':label,'direction':'positive_to_negative' if before>0 else 'negative_to_positive','timestamp_s':record['timestamp_s'],'frame_index':record['frame_index']})\n    return {**record,'line_pixels':[list(a),list(b)],'crossings':events,'cumulative_counts':totals.copy()}",
+        "reference_path": null,
+        "runs_every_frame": true,
+        "state_key": "global",
+        "triggers": [],
+        "type": "custom"
+      },
+      {
+        "category": "gating",
+        "description": "Report rolling per-class counts and threshold-crossing congestion alerts.",
+        "external_assets": [],
+        "id": 7,
+        "inputs": [
+          "crossing_events_counts_and_frame_metadata"
+        ],
+        "name": "congestion alert",
+        "outputs": [
+          "per_frame_counts_alert_events_and_status"
+        ],
+        "parameters": {
+          "method": "Per-class count threshold alert",
+          "thresholds": {
+            "buses": 4,
+            "cars": 20,
+            "pedestrians": 10,
+            "two_wheelers": 30
+          },
+          "window_seconds": 60
+        },
+        "placement": {
+          "attach_point": null,
+          "position": "post_tracker"
+        },
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p07i_counts",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p07o_results",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "from collections import deque\n# Persistent for entire stream: times={k:deque() for k in parameters['thresholds']}; was_active={k:False for k in parameters['thresholds']}.\ndef process(record):\n    global times, was_active\n    now=record['timestamp_s']; thresholds=parameters['thresholds']\n    for event in record['crossings']:\n        times[event['class']].append(event['timestamp_s'])\n    rolling={}; active={}; alerts=[]\n    for label,limit in thresholds.items():\n        queue=times[label]\n        while queue and queue[0] < now-parameters['window_seconds']: queue.popleft()\n        rolling[label]=len(queue)\n        active[label]=rolling[label]>=limit\n        if active[label] and not was_active[label]:\n            alerts.append({'type':'congestion','class':label,'rolling_count':rolling[label],'threshold':limit,'window_seconds':parameters['window_seconds'],'timestamp_s':now,'frame_index':record['frame_index']})\n        was_active[label]=active[label]\n    current={label:0 for label in thresholds}\n    for track in record['tracks']: current[track['label']]+=1\n    return {**record,'current_counts':current,'rolling_counts':rolling,'congestion_active':active,'alerts':alerts}",
+        "reference_path": null,
+        "runs_every_frame": true,
+        "state_key": "global",
+        "triggers": [],
+        "type": "custom"
+      },
+      {
+        "description": "Write framewise tracks, cumulative counts, and alerts as JSON.",
+        "grid": null,
+        "id": 8,
+        "name": "json",
+        "output_type": "single",
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p08i_results",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "# Open the destination for a streamed JSON array; write every frame, including empty detections.\nimport json, os\npath='/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/output/metadata.json'\nos.makedirs(os.path.dirname(path),exist_ok=True)\nf=open(path,'w',encoding='utf-8'); f.write('['); first=True\ndef process(record):\n    global first\n    if not first: f.write(',\\n')\n    json.dump(record,f,default=lambda v: v.item() if hasattr(v,'item') else list(v))\n    f.flush(); first=False\ndef close():\n    f.write(']\\n'); f.close()",
+        "resolution": null,
+        "type": "output",
+        "url": "file:///home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/output/metadata.json"
+      },
+      {
+        "description": "Publish live per-frame counts and congestion events to MQTT.",
+        "grid": null,
+        "id": 9,
+        "name": "mqtt",
+        "output_type": "single",
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p09i_results",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "import json\nimport paho.mqtt.client as mqtt\nclient=mqtt.Client(); client.connect('localhost',1883,60); client.loop_start()\ndef process(record):\n    payload=json.dumps(record,default=lambda v: v.item() if hasattr(v,'item') else list(v))\n    client.publish('junction/events',payload,qos=0)\ndef close():\n    client.loop_stop(); client.disconnect()",
+        "resolution": null,
+        "type": "output",
+        "url": "mqtt://localhost:1883/junction/events"
+      },
+      {
+        "description": "Save annotated junction video with crossing counts and alerts.",
+        "grid": null,
+        "id": 10,
+        "name": "file",
+        "output_type": "single",
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": "BGR",
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p10i_frame",
+            "tensor": {
+              "dtype": "uint8",
+              "shape": [
+                1080,
+                1920,
+                3
+              ]
+            }
+          },
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 30
+            },
+            "id": "p10i_results",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "import os\npath='/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/output/output.mp4'\nos.makedirs(os.path.dirname(path),exist_ok=True)\nwriter=cv2.VideoWriter(path,cv2.VideoWriter_fourcc(*'mp4v'),30.0,(1920,1080))\nif not writer.isOpened(): raise IOError('Cannot create output video')\ndef process(frame,record):\n    image=frame.copy()\n    a,b=record['line_pixels']; cv2.line(image,tuple(map(int,a)),tuple(map(int,b)),(0,255,255),3)\n    for track in record['tracks']:\n        x1,y1,x2,y2=map(int,track['box'])\n        cv2.rectangle(image,(x1,y1),(x2,y2),(0,200,0),2)\n        cv2.putText(image,f\"{track['label']} #{track['track_id']} {track['score']:.2f}\",(x1,max(22,y1-6)),cv2.FONT_HERSHEY_SIMPLEX,0.65,(0,255,0),2,cv2.LINE_AA)\n    y=32\n    for label in ('cars','two_wheelers','buses','pedestrians'):\n        text=f\"{label}: now {record['current_counts'][label]} | crossed {record['cumulative_counts'][label]} | 60s {record['rolling_counts'][label]}\"\n        cv2.putText(image,text,(16,y),cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),2,cv2.LINE_AA); y+=32\n    for label,active in record['congestion_active'].items():\n        if active:\n            cv2.putText(image,f'CONGESTION: {label}',(16,y),cv2.FONT_HERSHEY_SIMPLEX,0.8,(0,0,255),2,cv2.LINE_AA); y+=34\n    writer.write(image)\ndef close(): writer.release()",
+        "resolution": [
+          1920,
+          1080
+        ],
+        "type": "output",
+        "url": "file:///home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/output/output.mp4"
+      }
+    ]
+  }
+}

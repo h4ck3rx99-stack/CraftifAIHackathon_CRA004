@@ -1,0 +1,20 @@
+{
+  "blocks": [
+    {
+      "name": "Remaining layers 1\u2013256",
+      "operations": "CaskConvolution\u00d785 + Reformat\u00d773 + NoOp\u00d749",
+      "precision": "Mixed",
+      "time_ms": 7.474611,
+      "pct": 100.0,
+      "start_index": 0,
+      "end_index": 255,
+      "layer_count": 256
+    }
+  ],
+  "source": "reasoner",
+  "architecture": "YOLOv8-style object detector: CSP-like conv backbone with C2f blocks, PAN/FPN neck, one transformer block at 20x20, and decoupled DFL detection head with three scales (80x80, 40x40, 20x20).",
+  "total_ms": 7.474611,
+  "layer_count": 256,
+  "warnings": [],
+  "fingerprint": "256:7.475:Reformatting CopyNode for Input Tensor 0 to /model.0/conv/Conv:/model.23/Mul_2_output_0 copy"
+}

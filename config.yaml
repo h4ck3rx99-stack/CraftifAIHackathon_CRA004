@@ -1,0 +1,55 @@
+# Bengaluru Junction Sentinel - alert engine configuration.
+# The alert engine only CONSUMES PipeGen's MQTT/JSON output; it never runs a model.
+
+mqtt:
+  host: localhost
+  port: 1883
+  events_topic: junction/events      # PipeGen / DeepStream metadata feed
+  alerts_topic: junction/alerts      # congestion level + signal advice (this engine)
+  stats_topic: junction/stats        # per-second rolling counts for the dashboard
+
+junction:
+  name: "Demo approach (Pexels #30609021)"
+  approach: "inbound"
+  # Virtual stop line, as a fraction of frame height (0 = top, 1 = bottom).
+  # Used only when PipeGen does not emit its own line-crossing counts.
+  stop_line_y: 0.50   # same line as PipeGen PIR node 6 (line_normalized y=0.5)
+  frame_width: 1920
+  frame_height: 1080
+
+# PipeGen label -> Sentinel class. Anything not listed is ignored.
+class_map:
+  car: car
+  motorbike: two_wheeler
+  motorcycle: two_wheeler
+  bicycle: two_wheeler
+  two_wheeler: two_wheeler
+  bus: bus
+  truck: bus          # heavy vehicle, same signal weight as a bus
+  person: pedestrian
+  pedestrian: pedestrian
+
+# Passenger-car-unit weights (IRC:106 style) used to turn counts into demand.
+pcu:
+  car: 1.0
+  two_wheeler: 0.5
+  bus: 3.0
+  pedestrian: 0.0
+
+window_seconds: 60          # rolling window for "per minute" flow
+
+# Congestion thresholds on PCU crossing the stop line per rolling minute,
+# and on vehicles simultaneously visible in the approach (queue proxy).
+thresholds:
+  flow_pcu_per_min:   { medium: 15, high: 30 }
+  occupancy_vehicles: { medium: 25, high: 40 }
+
+# Suggested signal action per level (a signal controller would act on this).
+actions:
+  LOW:    { advice: "hold plan; consider -5s green", green_delta_s: -5 }
+  MEDIUM: { advice: "extend green +10s", green_delta_s: 10 }
+  HIGH:   { advice: "extend green +15s, flag for traffic police", green_delta_s: 15 }
+
+pedestrian_alert_threshold: 6   # pedestrians in frame -> request pedestrian phase
+
+incident_log: alerts/incidents.jsonl

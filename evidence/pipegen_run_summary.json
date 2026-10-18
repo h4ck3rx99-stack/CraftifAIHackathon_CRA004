@@ -1,0 +1,25 @@
+{
+  "frames": 2117,
+  "objects": 104684,
+  "final_fields": {
+    "cars_current": 24,
+    "cars_crossed": 100,
+    "cars_rolling_60s": 100,
+    "cars_congestion": 1,
+    "two_wheelers_current": 1,
+    "two_wheelers_crossed": 40,
+    "two_wheelers_rolling_60s": 37,
+    "two_wheelers_congestion": 1,
+    "buses_current": 0,
+    "buses_crossed": 6,
+    "buses_rolling_60s": 6,
+    "buses_congestion": 1,
+    "pedestrians_current": 0,
+    "pedestrians_crossed": 4,
+    "pedestrians_rolling_60s": 3,
+    "pedestrians_congestion": 0,
+    "crossing_event_count": 0,
+    "timestamp_s": 70.6,
+    "frame_index": 2116
+  }
+}

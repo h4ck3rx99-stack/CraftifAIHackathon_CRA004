@@ -1,0 +1,138 @@
+[run.sh] encoder: x264enc (software) @ 8000kbit/s — no /dev/v4l2-nvenc
+
+  ── Publishing detections over MQTT ──────────────────────────
+  Broker : localhost:1883
+  Topic  : junction/events
+
+  To CHECK messages are arriving — start it BEFORE the pipeline,
+  because messages sent while nobody is listening are discarded,
+  not queued.
+
+  From this machine (nothing to install):
+      docker run --rm --network host --entrypoint mosquitto_sub craftifaidocker/deepstream:7.1-amd64-v3 -h localhost -p 1883 -t 'junction/events' -v
+
+  From any machine that has the mosquitto clients installed:
+      mosquitto_sub -h localhost -p 1883 -t 'junction/events' -v
+
+  To USE it, subscribe to that topic from your own program. One
+  JSON message per frame: frame number, camera id, timestamp, and
+  a list of objects — each with a label, a tracking id that
+  follows it between frames, a confidence and a bounding box.
+
+  Change the broker without rebuilding:
+      MQTT_HOST=10.0.0.9 ./run.sh
+  ─────────────────────────────────────────────────────────────
+
+[run.sh] JSON -> /home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/output/metadata.json
+make: Entering directory '/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/pipeline/deepstream/parsers'
+make: Nothing to be done for 'all'.
+make: Leaving directory '/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/pipeline/deepstream/parsers'
+Setting pipeline to PAUSED ...
+gstnvtracker: Loading low-level lib at /opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
+[NvMultiObjectTracker] Initialized
+0:00:01.014717026 [36m 7799[00m 0x62605f4332f0 [36mINFO   [00m [00m    nvinfer_backport gstnvinfer.cpp:684:gst_nvinfer_backport_logger:<nvinferbackport0>[00m NvDsInferContext[UID 1]: Info from NvDsInferContextImpl::deserializeEngineAndBackend() <nvdsinfer_context_impl.cpp:2161> [UID = 1]: deserialized trt engine from :/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/model_stage/yolo11s.fp16.plan
+0:00:01.014791933 [36m 7799[00m 0x62605f4332f0 [36mINFO   [00m [00m    nvinfer_backport gstnvinfer.cpp:684:gst_nvinfer_backport_logger:<nvinferbackport0>[00m NvDsInferContext[UID 1]: Info from NvDsInferContextImpl::generateBackendContext() <nvdsinfer_context_impl.cpp:2264> [UID = 1]: Use deserialized engine model: /home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/model_stage/yolo11s.fp16.plan
+0:00:01.032974389 [36m 7799[00m 0x62605f4332f0 [36mINFO   [00m [00m    nvinfer_backport gstnvinfer_impl.cpp:343:notifyLoadModelStatus:<nvinferbackport0>[00m [UID 1]: Load new model:/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/pipeline/deepstream/configs/config_det_pgie.txt sucessfully
+Implicit layer support has been deprecated
+INFO: [Implicit Engine Info]: layers num: 0
+
+Pipeline is PREROLLING ...
+Failed to query video capabilities: Inappropriate ioctl for device
+Redistribute latency...
+[YOLOv11s] first call: layer=output0 numDims=2 networkInput=640x640 numClasses=80 outputs=1
+[YOLOv11s]   d[0] = 84
+[YOLOv11s]   d[1] = 8400
+[meta_json] file -> /home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/output/metadata.json
+[mqtt] publishing to localhost:1883 topic 'junction/events' qos 0, per-frame payloads
+[mqtt] connected
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+Redistribute latency...
+New clock: GstSystemClock
+Redistribute latency...
+[mqtt]            5 frames       19 objects       5 published    1.7 msg/s    2.9s
+[mqtt]           32 frames      373 objects      32 published   53.2 msg/s    3.4s
+[mqtt]           61 frames     1138 objects      61 published   57.6 msg/s    3.9s
+[mqtt]           91 frames     2199 objects      91 published   59.1 msg/s    4.5s
+[mqtt]          121 frames     3295 objects     121 published   58.8 msg/s    5.0s
+[mqtt]          150 frames     4443 objects     150 published   56.5 msg/s    5.5s
+[mqtt]          180 frames     5515 objects     180 published   58.6 msg/s    6.0s
+[mqtt]          210 frames     6558 objects     210 published   59.8 msg/s    6.5s
+[mqtt]          241 frames     7440 objects     241 published   61.0 msg/s    7.0s
+[mqtt]          271 frames     8311 objects     271 published   59.6 msg/s    7.5s
+[mqtt]          301 frames     9409 objects     301 published   57.8 msg/s    8.0s
+[mqtt]          330 frames    10685 objects     330 published   56.9 msg/s    8.5s
+[mqtt]          354 frames    12125 objects     354 published   47.1 msg/s    9.0s
+[mqtt]          382 frames    13842 objects     382 published   54.2 msg/s    9.6s
+[mqtt]          408 frames    15537 objects     408 published   50.5 msg/s   10.1s
+[mqtt]          437 frames    17258 objects     437 published   57.3 msg/s   10.6s
+[mqtt]          464 frames    18763 objects     464 published   52.8 msg/s   11.1s
+[mqtt]          491 frames    20125 objects     491 published   53.1 msg/s   11.6s
+[mqtt]          518 frames    21549 objects     518 published   52.9 msg/s   12.1s
+[mqtt]          546 frames    22878 objects     546 published   54.6 msg/s   12.6s
+[mqtt]          575 frames    24154 objects     575 published   56.6 msg/s   13.1s
+[mqtt]          604 frames    25527 objects     604 published   56.5 msg/s   13.6s
+[mqtt]          633 frames    26842 objects     633 published   56.0 msg/s   14.2s
+[mqtt]          663 frames    28071 objects     663 published   60.0 msg/s   14.7s
+[mqtt]          691 frames    29171 objects     691 published   55.0 msg/s   15.2s
+[mqtt]          718 frames    30457 objects     718 published   52.9 msg/s   15.7s
+[mqtt]          744 frames    31808 objects     744 published   51.5 msg/s   16.2s
+[mqtt]          772 frames    33276 objects     772 published   54.6 msg/s   16.7s
+[mqtt]          799 frames    34601 objects     799 published   53.8 msg/s   17.2s
+[mqtt]          828 frames    35979 objects     828 published   56.4 msg/s   17.7s
+[mqtt]          854 frames    37019 objects     854 published   52.0 msg/s   18.2s
+[mqtt]          882 frames    38346 objects     882 published   54.8 msg/s   18.7s
+[mqtt]          911 frames    39850 objects     911 published   56.1 msg/s   19.2s
+[mqtt]          937 frames    41236 objects     937 published   50.9 msg/s   19.8s
+[mqtt]          963 frames    42742 objects     963 published   51.2 msg/s   20.3s
+[mqtt]          991 frames    44338 objects     991 published   55.2 msg/s   20.8s
+[mqtt]         1019 frames    45889 objects    1019 published   55.7 msg/s   21.3s
+[mqtt]         1048 frames    47409 objects    1048 published   55.5 msg/s   21.8s
+[mqtt]         1076 frames    48755 objects    1076 published   55.5 msg/s   22.3s
+[mqtt]         1104 frames    50112 objects    1104 published   55.1 msg/s   22.8s
+[mqtt]         1130 frames    51368 objects    1130 published   51.7 msg/s   23.3s
+[mqtt]         1157 frames    52762 objects    1157 published   52.3 msg/s   23.8s
+[mqtt]         1186 frames    54197 objects    1186 published   57.9 msg/s   24.3s
+[mqtt]         1215 frames    55560 objects    1215 published   56.8 msg/s   24.8s
+[mqtt]         1245 frames    56914 objects    1245 published   58.5 msg/s   25.4s
+[mqtt]         1274 frames    58220 objects    1274 published   57.3 msg/s   25.9s
+[mqtt]         1302 frames    59526 objects    1302 published   54.8 msg/s   26.4s
+[mqtt]         1328 frames    60605 objects    1328 published   51.6 msg/s   26.9s
+[mqtt]         1354 frames    61773 objects    1354 published   51.8 msg/s   27.4s
+[mqtt]         1381 frames    63101 objects    1381 published   51.5 msg/s   27.9s
+[mqtt]         1408 frames    64649 objects    1408 published   52.9 msg/s   28.4s
+[mqtt]         1436 frames    66193 objects    1436 published   55.1 msg/s   28.9s
+[mqtt]         1460 frames    67620 objects    1460 published   47.2 msg/s   29.4s
+[mqtt]         1488 frames    69315 objects    1488 published   55.2 msg/s   29.9s
+[mqtt]         1517 frames    70975 objects    1517 published   56.8 msg/s   30.4s
+[mqtt]         1544 frames    72320 objects    1544 published   52.6 msg/s   31.0s
+[mqtt]         1568 frames    73490 objects    1568 published   48.0 msg/s   31.5s
+[mqtt]         1594 frames    74704 objects    1594 published   50.4 msg/s   32.0s
+[mqtt]         1621 frames    75840 objects    1621 published   53.8 msg/s   32.5s
+[mqtt]         1649 frames    77174 objects    1649 published   53.6 msg/s   33.0s
+[mqtt]         1678 frames    78710 objects    1678 published   56.2 msg/s   33.5s
+[mqtt]         1706 frames    80396 objects    1706 published   55.0 msg/s   34.0s
+[mqtt]         1733 frames    82043 objects    1733 published   54.0 msg/s   34.5s
+[mqtt]         1762 frames    83587 objects    1762 published   57.4 msg/s   35.0s
+[mqtt]         1791 frames    85147 objects    1791 published   56.7 msg/s   35.5s
+[mqtt]         1819 frames    86735 objects    1819 published   55.3 msg/s   36.0s
+[mqtt]         1846 frames    88409 objects    1846 published   53.0 msg/s   36.6s
+[mqtt]         1872 frames    90071 objects    1872 published   51.2 msg/s   37.1s
+[mqtt]         1901 frames    91667 objects    1901 published   57.8 msg/s   37.6s
+[mqtt]         1927 frames    93181 objects    1927 published   51.9 msg/s   38.1s
+[mqtt]         1955 frames    94796 objects    1955 published   54.5 msg/s   38.6s
+[mqtt]         1981 frames    96572 objects    1981 published   51.5 msg/s   39.1s
+[mqtt]         2007 frames    98300 objects    2007 published   51.9 msg/s   39.6s
+[mqtt]         2034 frames    99892 objects    2034 published   53.1 msg/s   40.1s
+[mqtt]         2058 frames   101438 objects    2058 published   47.6 msg/s   40.6s
+[mqtt]         2085 frames   103038 objects    2085 published   53.2 msg/s   41.1s
+[mqtt]         2113 frames   104493 objects    2113 published   55.3 msg/s   41.6s
+nvstreammux: Successfully handled EOS for source_id=0
+Got EOS from element "pipeline0".
+EOS received - stopping pipeline...
+Execution ended after 0:00:41.679175216
+Setting pipeline to NULL ...
+Freeing pipeline ...
+[NvMultiObjectTracker] De-initialized
+[meta_json] 2117 frames, 104684 objects
+[mqtt] done    2117 frames   104684 objects    2117 published   23.6 msg/s   41.8s

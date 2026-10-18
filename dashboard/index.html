@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Junction Sentinel</title>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#0e1116; --panel:#161b22; --line:#2a313c; --text:#e6edf3; --muted:#8b949e;
+          --car:#4f9cf7; --tw:#f2b33d; --bus:#e5534b; --ped:#3fb950;
+          --low:#238636; --med:#d29922; --high:#da3633; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+           padding:14px 20px; border-bottom:1px solid var(--line); }
+  h1 { margin:0; font-size:18px; letter-spacing:.2px; }
+  .sub { color:var(--muted); font-size:12px; }
+  .conn { font-size:12px; color:var(--muted); }
+  .conn b { color:var(--text); }
+  main { display:grid; grid-template-columns: 1.1fr 1.4fr; gap:14px; padding:14px 20px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding:12px 16px; } }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; min-width:0; }
+  .panel h2 { margin:0 0 10px; font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
+  .badge { display:flex; align-items:center; justify-content:space-between; gap:12px; border-radius:10px; padding:16px 18px;
+           font-weight:700; font-size:30px; background:#30363d; transition:background .3s; }
+  .badge small { display:block; font-size:13px; font-weight:500; opacity:.9; }
+  .badge.LOW { background:var(--low); } .badge.MEDIUM { background:var(--med); } .badge.HIGH { background:var(--high); }
+  .counters { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:12px; }
+  @media (max-width: 520px) { .counters { grid-template-columns: repeat(2, 1fr); } }
+  .ctr { border:1px solid var(--line); border-radius:8px; padding:10px; border-top:3px solid var(--c); }
+  .ctr .n { font-size:28px; font-weight:700; font-variant-numeric: tabular-nums; }
+  .ctr .l { color:var(--muted); font-size:12px; }
+  .ctr .m { font-size:12px; color:var(--text); font-variant-numeric: tabular-nums; }
+  .kpis { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:12px; }
+  .kpi { border:1px solid var(--line); border-radius:8px; padding:10px; }
+  .kpi .n { font-size:22px; font-weight:700; font-variant-numeric: tabular-nums; }
+  .kpi .l { color:var(--muted); font-size:12px; }
+  .chartbox { position:relative; height:280px; }
+  #log { list-style:none; margin:0; padding:0; max-height:300px; overflow:auto; font-family: ui-monospace, Consolas, monospace; font-size:12px; }
+  #log li { padding:6px 4px; border-bottom:1px solid var(--line); display:flex; gap:8px; align-items:baseline; }
+  #log .lv { font-weight:700; min-width:58px; }
+  #log .LOW { color:#56d364; } #log .MEDIUM { color:#e3b341; } #log .HIGH { color:#ff7b72; }
+  .full { grid-column: 1 / -1; }
+  .feed { font-family: ui-monospace, Consolas, monospace; font-size:11px; color:var(--muted); white-space:pre-wrap; word-break:break-all; max-height:90px; overflow:auto; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Bengaluru Junction Sentinel</h1>
+    <div class="sub">Live junction analytics · PipeGen → DeepStream TensorRT → MQTT → alert engine</div>
+  </div>
+  <div class="conn">MQTT <b id="conn">connecting…</b> · events <b id="evrate">0</b>/s · last update <b id="last">–</b></div>
+</header>
+<main>
+  <section class="panel">
+    <h2>Congestion</h2>
+    <div id="badge" class="badge">–<small id="advice">waiting for PipeGen feed</small></div>
+    <div class="counters">
+      <div class="ctr" style="--c:var(--car)"><div class="l">Cars crossed</div><div class="n" id="t_car">0</div><div class="m"><span id="f_car">0</span>/min · <span id="v_car">0</span> in view</div></div>
+      <div class="ctr" style="--c:var(--tw)"><div class="l">Two-wheelers</div><div class="n" id="t_two_wheeler">0</div><div class="m"><span id="f_two_wheeler">0</span>/min · <span id="v_two_wheeler">0</span> in view</div></div>
+      <div class="ctr" style="--c:var(--bus)"><div class="l">Buses / heavy</div><div class="n" id="t_bus">0</div><div class="m"><span id="f_bus">0</span>/min · <span id="v_bus">0</span> in view</div></div>
+      <div class="ctr" style="--c:var(--ped)"><div class="l">Pedestrians</div><div class="n" id="t_pedestrian">0</div><div class="m"><span id="f_pedestrian">0</span>/min · <span id="v_pedestrian">0</span> in view</div></div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Demand (PCU/min)</div><div class="n" id="pcu">0</div></div>
+      <div class="kpi"><div class="l">Vehicles in approach</div><div class="n" id="occ">0</div></div>
+      <div class="kpi"><div class="l">Green adjustment</div><div class="n" id="gd">–</div></div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Flow per minute (rolling) by class</h2>
+    <div class="chartbox"><canvas id="chart"></canvas></div>
+  </section>
+  <section class="panel">
+    <h2>Alert log · junction/alerts</h2>
+    <ul id="log"></ul>
+  </section>
+  <section class="panel">
+    <h2>Raw PipeGen feed · junction/events (latest)</h2>
+    <div class="feed" id="raw">–</div>
+  </section>
+</main>
+<script>
+const qs = new URLSearchParams(location.search);
+const url = qs.get("ws") || `ws://${location.hostname || "localhost"}:9001`;
+const CLASSES = ["car", "two_wheeler", "bus", "pedestrian"];
+const COLORS = { car:"#4f9cf7", two_wheeler:"#f2b33d", bus:"#e5534b", pedestrian:"#3fb950" };
+const NAMES = { car:"Car", two_wheeler:"Two-wheeler", bus:"Bus / heavy", pedestrian:"Pedestrian" };
+const $ = id => document.getElementById(id);
+
+const chart = new Chart($("chart"), {
+  type: "line",
+  data: { labels: [], datasets: CLASSES.map(c => ({ label: NAMES[c], data: [], borderColor: COLORS[c],
+          backgroundColor: COLORS[c], tension: .3, pointRadius: 0, borderWidth: 2 })) },
+  options: { animation:false, maintainAspectRatio:false, responsive:true,
+    scales: { x: { ticks:{ color:"#8b949e", maxTicksLimit:8 }, grid:{ color:"#21262d" } },
+              y: { beginAtZero:true, ticks:{ color:"#8b949e" }, grid:{ color:"#21262d" } } },
+    plugins: { legend: { labels: { color:"#e6edf3", boxWidth:12 } } } }
+});
+
+let evCount = 0;
+setInterval(() => { $("evrate").textContent = evCount; evCount = 0; }, 1000);
+
+const client = mqtt.connect(url, { reconnectPeriod: 2000, clientId: "sentinel-dash-" + Math.random().toString(16).slice(2, 8) });
+client.on("connect", () => { $("conn").textContent = "connected"; client.subscribe(["junction/stats", "junction/alerts", "junction/events"]); });
+client.on("reconnect", () => $("conn").textContent = "reconnecting…");
+client.on("error", e => $("conn").textContent = "error: " + e.message);
+
+client.on("message", (topic, payload) => {
+  const text = payload.toString();
+  if (topic === "junction/events") { evCount++; if (evCount % 5 === 1) $("raw").textContent = text.slice(0, 600); return; }
+  let m; try { m = JSON.parse(text); } catch { return; }
+  if (topic === "junction/stats") renderStats(m);
+  if (topic === "junction/alerts") renderAlert(m);
+});
+
+function renderStats(s) {
+  const b = $("badge");
+  b.className = "badge " + s.congestion_level;
+  b.firstChild.nodeValue = s.congestion_level + " ";
+  $("advice").textContent = s.advice + (s.pedestrian_phase_request ? " · pedestrian phase requested" : "");
+  for (const c of CLASSES) {
+    $("t_" + c).textContent = s.totals_crossed[c];
+    $("f_" + c).textContent = s.flow_per_min[c];
+    $("v_" + c).textContent = s.visible_now[c];
+  }
+  $("pcu").textContent = s.pcu_per_min;
+  $("occ").textContent = s.occupancy_vehicles;
+  $("gd").textContent = (s.green_delta_s > 0 ? "+" : "") + s.green_delta_s + "s";
+  $("last").textContent = new Date(s.ts * 1000).toLocaleTimeString();
+  const d = chart.data;
+  d.labels.push(new Date(s.ts * 1000).toLocaleTimeString());
+  CLASSES.forEach((c, i) => d.datasets[i].data.push(s.flow_per_min[c]));
+  if (d.labels.length > 120) { d.labels.shift(); d.datasets.forEach(ds => ds.data.shift()); }
+  chart.update();
+}
+
+function renderAlert(a) {
+  const li = document.createElement("li");
+  const t = new Date(a.ts * 1000).toLocaleTimeString();
+  li.innerHTML = `<span>${t}</span><span class="lv ${a.level}">${a.level}</span><span></span>`;
+  li.lastChild.textContent = `${a.suggested_signal_action} · ${a.pcu_per_min} PCU/min · ${a.occupancy_vehicles} veh`;
+  $("log").prepend(li);
+  while ($("log").children.length > 200) $("log").lastChild.remove();
+}
+</script>
+</body>
+</html>

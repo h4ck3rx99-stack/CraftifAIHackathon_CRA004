@@ -1,0 +1,27 @@
+# runtime
+.venv/
+__pycache__/
+*.pyc
+logs/
+*.pid
+
+# large / generated binaries (kept locally, not in git)
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.engine
+*.plan
+*.onnx
+*.pt
+*.etlt
+*.tar
+*.zip
+# the demo video is the one exception (kept < 50 MB)
+!evidence/demo.mp4
+
+# keep PipeGen reports, IR, configs and JSON metadata
+!pipegen_export/**/*.json
+!pipegen_export/**/*.txt
+!pipegen_export/**/*.yml
+!pipegen_export/**/*.yaml

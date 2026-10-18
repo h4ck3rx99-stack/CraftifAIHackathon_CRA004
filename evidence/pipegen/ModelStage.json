@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "steps": {
+    "visualize": {
+      "step": "visualize",
+      "status": "ok",
+      "summary": "323 graph nodes \u00b7 0 unresolved TensorRT node(s)",
+      "detail": "",
+      "data": {
+        "_data_file": "/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/model_stage/visualize.data.json"
+      },
+      "warnings": [],
+      "artifacts": {},
+      "recorded_at": 1792315326.141785
+    },
+    "compile": {
+      "step": "compile",
+      "status": "warning",
+      "summary": "FP16 engine built in 124.5s \u2014 256 TRT layers, 31.1 MB.",
+      "detail": "**yolo11s.onnx \u2192 yolo11s.fp16.plan**  \u00b7  TensorRT 10.13.3.9\n\nThe engine is on disk and this is the file that gets deployed. Nothing has been run yet, so none of this is a speed measurement \u2014 the build time above is how long it took to CREATE, not how fast it goes.\n\n**Asked for FP16, but the engine is mixed:** FP16 201 \u00b7 FP32 55.\n\nTensorRT falls back when a layer has no kernel at the precision you asked for. This is the usual reason a speed-up comes in smaller than expected \u2014 the layers that fell back are still running at the slower format.\n\n**Layout conversion \u2014 29% of layers**\n\n73 of 256 layers do no maths. They only rearrange data so the next layer can read it.\n\nAround 8% is normal at FP32. What this number is really for is comparing two builds of the SAME model: a jump after a precision change is the cost of extra shuffling, not a worse choice of kernel. At 29% a large share of this engine is moving data rather than computing \u2014 worth comparing against another precision before concluding the model is simply expensive.\n\n**What the engine is made of**\n\n| Kind | Count | What it does |\n|---|---:|---|\n| CaskConvolution | 85 | convolutions |\n| Reformat | 73 | layout/precision conversion \u2014 overhead, not maths |\n| NoOp | 49 | removed entirely |\n| PointWiseV2 | 30 | elementwise maths, fused |\n| kgen | 4 | \u2014 |\n| Shuffle | 4 | reshapes and transposes |\n| CaskPooling | 3 | \u2014 |\n| Constant | 3 | \u2014 |\n| gemm | 2 | \u2014 |\n| Resize | 2 | resizing |\n| CaskSoftMaxV2 | 1 | \u2014 |\n\nThese are TensorRT's own kernel families, after it merged what it could \u2014 which is why the count does not match the ONNX node count.",
+      "data": {
+        "_data_file": "/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/model_stage/compile.data.json"
+      },
+      "warnings": [
+        "First build on this GPU, so every kernel had to be timed (124s). The timings are now cached; rebuilding this model after surgery or quantization will be far quicker."
+      ],
+      "artifacts": {
+        "engine": "/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/model_stage/yolo11s.fp16.plan"
+      },
+      "recorded_at": 1792315447.9667697
+    },
+    "engine": {
+      "step": "engine",
+      "status": "ok",
+      "summary": "FP16 engine: 6.374 ms/frame \u00b7 ~157 fps \u00b7 46.77 W",
+      "detail": "**yolo11s.fp16.plan** (TensorRT 10.13.3.9, FP16)\n\n| Measurement | Value | Source |\n|---|---:|---|\n| Frame time (end to end) | 6.374 ms | trtexec |\n| GPU compute only | 5.931 ms | trtexec |\n| Host\u2194device transfer | 0.443 ms | derived |\n| Summed layer time | 7.475 ms | /home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/model_stage/yolo11s.fp16.runtime.profile.json |\n| Profiling overhead | 1.26\u00d7 | summed layers \u00f7 GPU compute |\n| Throughput | ~157 fps | derived |\n| Power | 46.77 W | nvidia-smi |\n\n**Precision TensorRT actually chose**\n\n| Precision | Layers |\n|---|---:|\n| FP16 | 201 |\n| FP32 | 55 |\n\n**Selected tactics**\n\n| Tactic | Count |\n|---|---:|\n| 0x00000000000003e8 | 73 |\n| 0x0000000000000000 | 56 |\n| 0x0000000000000009 | 23 |\n| 0xded5318b4a444b84 | 20 |\n| 0x83140fbc4d25e909 | 8 |\n| 0x92650053128339fe | 6 |\n| 0x8f3fdd4c960cf6fe | 6 |\n| 0x34fc94aee8fd2437 | 6 |\n| 0xe52b0ddb126aa135 | 5 |\n| 0x000000000000001c | 5 |\n| kgen | 4 |\n| 0xf79479a62ea9f901 | 3 |\n\nTactic/runtime/power values are separated by provenance; per-layer power is not claimed from whole-engine telemetry.\n\n---\n\n**yolo11s.onnx** on **Jetson Orin NX 16GB** (fp16, 15W)\n\n| Metric | Value |\n|---|---|\n| Latency / frame | 4.60 ms |\n| Throughput | ~218 fps |\n| Energy / frame | 49438.6 \u00b5J |\n| Operation power | 10.75 W |\n| Steady-state temperature rise | +16.13 \u00b0C |\n| Units profiled | 290 / 290 (100%) |\n\n**Time by family**\n\n| Family | ms | share |\n|---|---:|---:|\n| elementwise | 2.803 | 61% |\n| compute | 1.677 | 36% |\n| resize | 0.060 | 1% |\n| norm | 0.046 | 1% |\n| pool | 0.012 | 0% |\n\n**Hotspots**\n\n| Unit | Subgraph | Algorithm | ms | share | bound |\n|---|---|---|---:|---:|---|\n| `/model.0/act/Sigmoid` | pointwise | fused_pwn | 0.128 | 2.8% | memory-bound |\n| `/model.0/act/Mul` | pointwise | fused_pwn | 0.128 | 2.8% | memory-bound |\n| `/model.2/cv2/act/Sigmoid` | pointwise | fused_pwn | 0.128 | 2.8% | memory-bound |\n| `/model.2/cv2/act/Mul` | pointwise | fused_pwn | 0.128 | 2.8% | memory-bound |\n| `/model.2/cv2/conv/Conv` | pwconv_bias_act | implicit_gemm | 0.112 | 2.4% | memory-bound |\n| `/model.1/conv/Conv` | conv_bias_act | implicit_gemm | 0.096 | 2.1% | memory-bound |\n| `/model.0/conv/Conv` | conv_bias_act | implicit_gemm | 0.088 | 1.9% | memory-bound |\n| `/model.3/conv/Conv` | conv_bias_act | winograd | 0.083 | 1.8% | memory-bound |\n\n_Modelled (roofline over the Jetson Orin NX 16GB fact table), not measured. Use it to compare options; use the layer report for ground truth._",
+      "data": {
+        "_data_file": "/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/model_stage/engine.data.json"
+      },
+      "warnings": [],
+      "artifacts": {
+        "engine": "/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/model_stage/yolo11s.fp16.plan",
+        "tactics": "/home/aayush/.pipegen/h4ck3rx99/123d390b-318c-4ee8-be80-a3b92b47c13d/model_stage/engine_tactics.json"
+      },
+      "recorded_at": 1792316413.2978415
+    }
+  },
+  "constraint": {},
+  "choices": {
+    "selected_artifact": "baseline",
+    "optimization_decision": "",
+    "quantization_preparation": {},
+    "task": "detection"
+  }
+}
