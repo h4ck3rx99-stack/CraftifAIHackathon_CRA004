@@ -63,8 +63,8 @@ flowchart LR
 Requirements: PipeGen v0.5.1 installed per CraftifAI's guide (Docker + NVIDIA Container Toolkit, X11), and mosquitto with a websockets listener on 9001.
 
 ```bash
-git clone https://github.com/h4ck3rx99-stack/bengaluru-junction-sentinel
-cd bengaluru-junction-sentinel
+git clone https://github.com/h4ck3rx99-stack/CraftifAIHackathon_CRA004
+cd CraftifAIHackathon_CRA004
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ./scripts/demo.sh          # broker + alert engine + dashboard (http://localhost:8080) + PipeGen run.sh
 ```
